@@ -5,7 +5,7 @@ services:
     container_name: flask-app
     networks:
       - app_network
-    exposes:
+    expose:
       - "5000"
     depends_on:
       - db

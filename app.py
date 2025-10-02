@@ -22,7 +22,7 @@ def users():
         conn = mysql.connector.connect(**db_config)
         cursor = conn.cursor()
         cursor.execute("CREATE TABLE IF NOT EXISTS users (id INT AUTO_INCREMENT PRIMARY KEY, name VARCHAR(50))")
-        cursor.execute("INSERT INTO users (name) VALUES ('Mohammed Sohail welcome ')")
+        cursor.execute("INSERT INTO users (name) VALUES ('Mohammed Sohail Welcome Man')")
         conn.commit()
 
         cursor.execute("SELECT * FROM users")

@@ -30,9 +30,9 @@ pipeline {
 
   stage ("Deploy") {
    steps {
-    sshagent (credentials: ['aws-ssh-key']) {
+    sshagent (credentials: ['vm-ssh-key']) {
      sh """
-     ssh -o StrictHostKeyChecking=no ubuntu@13.203.76.212 'cd ~/flask-mysql-nginx && ./deploy.sh'
+     ssh -o StrictHostKeyChecking=no sohail@192.168.97.139 'cd ~/flask-mysql-nginx && ./deploy.sh'
      """
 }
 }

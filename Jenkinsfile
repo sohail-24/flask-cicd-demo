@@ -1,27 +1,34 @@
-@Library('my-shared-lib') _
-
 pipeline {
     agent any
-
+    environment {
+        DOCKERHUB_CREDENTIALS = 'dockerhub-creds'
+        IMAGE_NAME = 'sohail/flask-cicd-demo'
+    }
     stages {
-        stage('Checkout') {
+        stage('Clone Code') {
             steps {
-                checkout scm
+                git branch: 'main', url: 'https://github.com/sohail-24/flask-cicd-demo.git'
             }
         }
-        stage('Build') {
+        stage('Build Docker Image') {
             steps {
-                buildDocker('sohail28/flask-cicd-demo:latest')
+                script {
+                    sh "docker build -t ${IMAGE_NAME}:latest ."
+                }
             }
         }
-        stage('Test') {
+        stage('Login to DockerHub') {
             steps {
-                testApp()
+                script {
+                    withCredentials([usernamePassword(credentialsId: "${DOCKERHUB_CREDENTIALS}", usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
+                        sh "echo $PASSWORD | docker login -u $USERNAME --password-stdin"
+                    }
+                }
             }
         }
-        stage('Deploy') {
+        stage('Push to DockerHub') {
             steps {
-                deployApp()
+                sh "docker push ${IMAGE_NAME}:latest"
             }
         }
     }

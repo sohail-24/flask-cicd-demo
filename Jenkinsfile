@@ -34,7 +34,7 @@ pipeline {
 
         stage('Deploy on Server') {
             steps {
-                sshagent (credentials: ['ssh-server']) {
+                sshagent (credentials: ['vm-ssh-key']) {
                     sh '''
                         ssh -o StrictHostKeyChecking=no $DEPLOY_SERVER "
                             docker pull $IMAGE_NAME:latest &&

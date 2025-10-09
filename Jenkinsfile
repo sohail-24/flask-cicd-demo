@@ -1,35 +1,50 @@
 pipeline {
     agent any
+
     environment {
-        DOCKERHUB_CREDENTIALS = 'dockerhub-creds'
-        IMAGE_NAME = 'sohail28/flask-cicd-demo'
+        IMAGE_NAME = "sohail28/flask-cicd-demo"
+        CONTAINER_NAME = "flask-app"
+        DEPLOY_SERVER = "sohail@192.168.97.139"
     }
+
     stages {
-        stage('Clone Code') {
+
+        stage('Clone the Code') {
             steps {
-                git branch: 'main', url: 'https://github.com/sohail-24/flask-cicd-demo.git'
+                git credentialsId: 'github-creds', url: 'https://github.com/sohail-24/flask-cicd-demo.git', branch: 'main'
             }
         }
+
         stage('Build Docker Image') {
             steps {
-                script {
-                    sh "docker build -t ${IMAGE_NAME}:latest ."
+                sh 'docker build -t $IMAGE_NAME:latest .'
+            }
+        }
+
+        stage('Push to Docker Hub') {
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'docker-creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                    sh '''
+                        echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
+                        docker push $IMAGE_NAME:latest
+                    '''
                 }
             }
         }
-        stage('Login to DockerHub') {
+
+        stage('Deploy on Server') {
             steps {
-                script {
-                    withCredentials([usernamePassword(credentialsId: "${DOCKERHUB_CREDENTIALS}", usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
-                        sh "echo $PASSWORD | docker login -u $USERNAME --password-stdin"
-                    }
+                sshagent (credentials: ['ssh-server']) {
+                    sh '''
+                        ssh -o StrictHostKeyChecking=no $DEPLOY_SERVER "
+                            docker pull $IMAGE_NAME:latest &&
+                            docker rm -f $CONTAINER_NAME || true &&
+                            docker run -d --name $CONTAINER_NAME -p 5000:5000 $IMAGE_NAME:latest
+                        "
+                    '''
                 }
-            }
-        }
-        stage('Push to DockerHub') {
-            steps {
-                sh "docker push ${IMAGE_NAME}:latest"
             }
         }
     }
 }
+
